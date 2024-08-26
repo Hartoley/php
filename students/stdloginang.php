@@ -1,4 +1,5 @@
 <?php
+    session_start();   
     header('Access-Control-Allow-Origin: *'); 
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type, Authorization'); 
@@ -16,6 +17,7 @@
     $sql = "SELECT * FROM user WHERE email ='$email'";
     $response= mysqli_query($conn, $sql);
     $result = mysqli_fetch_assoc($response);
+    $id = $result['id'];
    
 
     if ($result) { 
@@ -25,18 +27,27 @@
                 exit();
             
             }else {
-                session_start();
+               
                 $token = bin2hex(random_bytes(16));
-                $token_expire = time() + (60 * 100);
+                $token_expire = time() + (60 * 100 );
                 $_SESSION['token'] = $token;
                 $_SESSION['email'] = $email;
-                echo json_encode([
-                    'message' => 'Login to dashboard successful',
-                    'token' => $token,
-                    'email' => $email,
-                    "success" => true,
-                ]);
-                // header("Location: createProduct.php");  
+                $_SESSION['id'] = $id;
+                if (isset($_SESSION['email'])) {
+                    echo json_encode([
+                        'message' => 'Login to dashboard successful',
+                        'token' => $token,
+                        'email' => $email,
+                        'id' => $id,
+                        "success" => true,
+                        
+                    ]);
+                    // header('Location: displaycart.php?email=' . $email);
+                } else {
+                    echo json_encode(['message' => 'error occured while setting sessions']);
+                }
+                
+              
             };
            
         }else {

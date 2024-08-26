@@ -8,7 +8,7 @@
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
         exit();
     }
-        // header('Content-Type: application/json');
+        header('Content-Type: application/json');
         $data = json_decode(file_get_contents('php://input'), true);
     
 
@@ -16,11 +16,12 @@
             $first_name = $data['first_name'];
             $last_name = $data['last_name'];
             $email = $data['email'];
-            $password = $data['password'];
+            $password =  password_hash($data['password'] , PASSWORD_DEFAULT);
+
 
            include("../database/connectdb.php");
         
-            $sql = "INSERT INTO user (first_name, last_name, email, password) VALUES ('$first_name', '$last_name', '$email', '$password')";
+            $sql = "INSERT INTO user (first_name, last_name, email, avatar, password, role) VALUES ('$first_name', '$last_name', '$email', null, '$password', 'user')";
             if (mysqli_query($conn, $sql)) {
                 echo json_encode(['message' => 'Registration successful']);
                 

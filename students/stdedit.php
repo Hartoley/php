@@ -21,10 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = $stmt->get_result();
 
     if ($result) {
-        $cartItems = [];
-        while ($row = $result->fetch_assoc()) {
-            $cartItems[] = $row;
-        }
+        $cartItems = mysqli_fetch_assoc($result);
 
         header('Content-Type:application/json');
         echo json_encode(['message' => 'Cart items retrieved successfully', 'data' => $cartItems]);
@@ -34,5 +31,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $stmt->close();
 }
-
-?>
