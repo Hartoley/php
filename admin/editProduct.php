@@ -12,26 +12,19 @@ session_start();
 include("../database/connectdb.php");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id = isset($_POST['id']) ? (int)$_POST['id'] : null;
+    $product_name = isset($_POST['product_name']) ? $_POST['product_name'] : null;
+    $product_price = isset($_POST['product_price']) ? $_POST['product_price'] : null;
+    $product_category = isset($_POST['product_category']) ? $_POST['product_category'] : null;
+    $product_description = isset($_POST['product_description']) ? $_POST['product_description'] : null;
+    $in_stock = isset($_POST['in_stock']) ? $_POST['in_stock'] : null;
 
-    $data = json_decode(file_get_contents('php://input'), true);
-
-    if ($data && isset($data['id']) && isset($data['product_name']) && isset($data['product_price']) && isset($data['product_category']) && isset($data['product_description']) && isset($data['in_stock'])) {
-        $id = (int) $data['id'];
-        $product_name = $data['product_name'];
-        $product_price = $data['product_price'];
-        $product_category = $data['product_category'];
-        $product_description = $data['product_description'];
-        $in_stock = $data['in_stock'];
-
-        $stmt = $conn->prepare("UPDATE products SET product_name = ?, product_price = ?, product_category = ?, product_description = ?, in_stock = ? WHERE id = ?");
+    if ($id && $product_name && $product_price && $product_category && $product_description && $in_stock) {
+        $stmt = $conn->prepare("UPDATE products SET product_name = ?, product_price = ?, product_category = ?, product_desc = ?, in_stock = ? WHERE id = ?");
         $stmt->bind_param("ssssii", $product_name, $product_price, $product_category, $product_description, $in_stock, $id);
 
         if ($stmt->execute()) {
-            if ($stmt->affected_rows > 0) {
-                echo json_encode(['message' => 'Product updated successfully']);
-            } else {
-                echo json_encode(['message' => 'No changes made or product not found']);
-            }
+            echo json_encode(['message' => 'Product updated successfully']);
         } else {
             echo json_encode(['message' => 'Error updating product: ' . $stmt->error]);
         }
@@ -41,5 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['message' => 'Invalid data']);
     }
 }
+
 
 ?>
