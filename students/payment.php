@@ -1,85 +1,50 @@
 <?php
-
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit();
-}
-
-session_start();
 include("../database/connectdb.php");
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $data = json_decode(file_get_contents('php://input'), true);
-    $user_id = $data['Id'] ?? '';
-    $user_total = trim($data['total'] ?? '');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Methods');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 
-   
-    $paystack_secret_key = 'sk_test_1bc61b4143f3f54c3f52f5c24d92ce168d89bf3c'; 
-    $url = "https://api.paystack.co/transaction/initialize";
-    $fields = [
-        'email' => "customer@domain.com",
-        'amount' => $user_total,
-        'reference' => uniqid('PAYSTACK-')
-    ];
+$user_data = json_decode(file_get_contents('php://input'), true);
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+if ($user_data) {
+    $user_id = $user_data['Id'] ?? '';
+    $user_email=$user_data['email'] ?? '';
+    $user_total = trim($user_data['total'] ?? '');
+    $curl = curl_init();
 
-    $response = curl_exec($ch);
-    $err = curl_error($ch);
 
-    curl_close($ch);
+$data = [
+    "email" => $user_email,
+    "amount" => $user_total * 100,
+     "callback_url" =>'http://localhost:4200/studentdash'
+];
 
-    if ($err) {
-        echo json_encode(['message' => "cURL Error #:" . $err]);
-    } 
-    else {
-        $result = json_decode($response, true);
+curl_setopt_array($curl, [
+    CURLOPT_URL => "https://api.paystack.co/transaction/initialize",
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_CUSTOMREQUEST => "POST",
+    CURLOPT_POSTFIELDS => json_encode($data),
+    CURLOPT_HTTPHEADER => [
+        "Authorization: Bearer sk_test_b093fd15cf53c1acc9e933d99db17a12db11a515",
+        "Content-Type: application/json"
+    ],
+]);
 
-        if (isset($result['status']) && $result['status'] === true) {
-         
-            $data = [
-                'message' => 'Payment initialization successful',
-                'data' => [
-                    'authorization_url' => $result['data']['authorization_url'],
+$response = curl_exec($curl);
+$err = curl_error($curl);
 
-                   
-                ]
-            ];
-            
-            echo json_encode($data);
-        } else {
-            echo json_encode(['message' => 'Payment initialization failed: ' . $result['message']]);
-        }
-    }
+curl_close($curl);
 
-    // Uncomment the following section if you need to retrieve cart items
-    // $stmt = $conn->prepare("SELECT * FROM cart WHERE user_id = ?");
-    // $stmt->bind_param("s", $user_id);
-    // $stmt->execute();
-    // $result = $stmt->get_result();
+if ($err) {
+    echo json_encode( "cURL Error #:" . $err);
+} else {
+    $rezz= json_decode($response, true);
+    echo json_encode($rezz['data']['authorization_url']);
+}
 
-    // if ($result) {
-    //     $cartItems = [];
-    //     while ($row = $result->fetch_assoc()) {
-    //         $cartItems[] = $row;
-    //     }
 
-    //     header('Content-Type:application/json');
-    //     echo json_encode(['message' => 'Cart items retrieved successfully', 'data' => $cartItems]);
-    // } else {
-    //     echo json_encode(['message' => 'No cart items found']);
-    // }
 
-    // $stmt->close();
 }
 
 ?>
